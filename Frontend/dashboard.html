@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Dashboard | Alta Fundamental 111</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <link rel="stylesheet" href="./CSS/dashboard.css">
+</head>
+
+<body class="dash-body">
+
+  <div class="dots-container"></div>
+
+
+  <!-- ================= NAVBAR ================= -->
+
+  <header class="top-navbar">
+
+    <div class="nav-content">
+
+      <div class="nav-brand">
+
+        <div class="brand-badge">
+          111
+        </div>
+
+        <span class="brand-title">
+          Alta Fundamental 111
+        </span>
+
+      </div>
+
+
+      <!-- Dashboard / Rank -->
+
+      <div class="nav-slider-container">
+
+        <div id="sliderGlider" class="slider-glider pos-dashboard"></div>
+
+        <button type="button" id="tabDashboard" class="slider-btn active">
+          Dashboard
+        </button>
+
+        <button type="button" id="tabRank" class="slider-btn">
+          Rank
+        </button>
+
+      </div>
+
+
+      <!-- User -->
+
+      <div class="nav-user-area">
+
+        <a href="profile.html" class="profile-avatar-btn" title="View Profile">
+
+          <img src="https://api.dicebear.com/7.x/bottts/svg?seed=AltaUser" alt="Profile Avatar"
+            class="profile-avatar-img" id="userAvatar">
+
+        </a>
+
+
+        <button type="button" id="logoutBtn" class="logout-btn">
+          Logout
+        </button>
+
+      </div>
+
+    </div>
+
+  </header>
+
+
+
+  <!-- ================= MAIN ================= -->
+
+  <main class="dash-main">
+
+
+    <!-- ================= GAUGES ================= -->
+
+    <div class="gauges-row">
+
+
+      <!-- DAY / PROGRESS -->
+
+      <div class="gauge-card">
+
+        <h3 class="gauge-title">
+          Day Progress
+        </h3>
+
+
+        <div class="gauge-wrapper">
+
+          <svg class="gauge-svg" viewBox="0 0 120 120">
+
+            <path class="gauge-bg-path" d="M 18,90 A 48,48 0 1,1 102,90" />
+
+            <path id="dayProgressArc" class="gauge-active-path path-cyan" d="M 18,90 A 48,48 0 1,1 102,90"
+              stroke-dasharray="230" stroke-dashoffset="230" />
+
+          </svg>
+
+
+          <div class="gauge-text-overlay">
+
+            <div class="gauge-primary-val">
+
+              <span id="currentDay">
+                0
+              </span>
+
+              <span class="gauge-sub-val">
+                /111
+              </span>
+
+            </div>
+
+
+            <div class="gauge-label">
+              Completed
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <p class="gauge-footer" id="nextSubText">
+          Next: Day 1
+        </p>
+
+      </div>
+
+
+
+      <!-- ================= ACTIVE STREAK ================= -->
+
+      <div class="gauge-card">
+
+        <h3 class="gauge-title">
+          Active Streak
+        </h3>
+
+
+        <div class="gauge-wrapper">
+
+          <svg class="gauge-svg" viewBox="0 0 120 120">
+
+            <path class="gauge-bg-path" d="M 18,90 A 48,48 0 1,1 102,90" />
+
+            <path id="streakArc" class="gauge-active-path path-orange" d="M 18,90 A 48,48 0 1,1 102,90"
+              stroke-dasharray="230" stroke-dashoffset="230" />
+
+          </svg>
+
+
+          <div class="gauge-text-overlay">
+
+            <div class="gauge-primary-val">
+
+              <span id="streakCount">
+                0
+              </span>
+
+            </div>
+
+
+            <div class="gauge-label">
+              🔥 Days
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <p class="gauge-footer" id="streakMessage">
+          Start your streak
+        </p>
+
+      </div>
+
+
+
+      <!-- ================= FLAGS ================= -->
+
+      <div class="gauge-card">
+
+        <h3 class="gauge-title">
+          Flag Warning
+        </h3>
+
+
+        <div class="gauge-wrapper">
+
+          <svg class="gauge-svg" viewBox="0 0 120 120">
+
+            <path class="gauge-bg-path" d="M 18,90 A 48,48 0 1,1 102,90" />
+
+            <path id="flagArc" class="gauge-active-path path-red" d="M 18,90 A 48,48 0 1,1 102,90"
+              stroke-dasharray="230" stroke-dashoffset="230" />
+
+          </svg>
+
+
+          <div class="gauge-text-overlay">
+
+            <div class="gauge-primary-val">
+
+              <span id="flagCount">
+                0
+              </span>
+
+              <span class="gauge-sub-val">
+                /2
+              </span>
+
+            </div>
+
+
+            <div class="gauge-label">
+              🚩 Flags
+            </div>
+
+          </div>
+
+        </div>
+
+
+        <p class="gauge-footer" id="flagMessage">
+          No flags
+        </p>
+
+      </div>
+
+    </div>
+
+
+
+    <!-- ================= IMPORTANT INFORMATION ================= -->
+
+    <div class="info-card">
+
+      <div class="info-header">
+
+        <div class="info-icon">
+          💡
+        </div>
+
+        <h2 class="info-title">
+          IMPORTANT INFORMATION
+        </h2>
+
+      </div>
+
+
+      <ul class="info-list">
+
+
+        <li class="info-item">
+
+          <span class="bullet-badge warning-badge">
+            1
+          </span>
+
+          <div class="info-content">
+
+            <strong>
+              LinkedIn Posting Rule & Streak Loss:
+            </strong>
+
+            <p>
+              You must post your daily problem solutions on LinkedIn
+              every day. Missing <strong>Day 1</strong> will result in a
+              <em>Flag Warning</em>. Missing <strong>Day 2</strong>
+              consecutively will cause you to
+              <strong>lose your entire streak</strong>, forcing you to
+              restart your journey from <strong>Day 1</strong>.
+            </p>
+
+          </div>
+
+        </li>
+
+
+
+        <li class="info-item">
+
+          <span class="bullet-badge progress-badge">
+            2
+          </span>
+
+          <div class="info-content">
+
+            <strong>
+              Consistency & Leaderboard Rank:
+            </strong>
+
+            <p>
+              Maintain your daily momentum! Consistent uploads preserve
+              your streak score and push your standing higher on the
+              <strong>Leaderboard Rank</strong>. Stay dedicated and
+              climb to the top!
+            </p>
+
+          </div>
+
+        </li>
+
+      </ul>
+
+    </div>
+
+
+
+    <!-- ================= SUBMISSION ================= -->
+
+    <div class="submit-card">
+
+      <div class="submit-card-content">
+
+        <h3 class="submit-card-title">
+          Daily Submission Portal
+        </h3>
+
+        <p class="submit-card-desc">
+          Ready to record today's progress? Click to submit your
+          LinkedIn post link and update your streak.
+        </p>
+
+      </div>
+
+
+      <button type="button" id="submitProgressBtn" class="submit-main-btn">
+        <span>Submit Progress</span>
+
+        <svg class="btn-arrow-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd"
+            d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414L11.707 15.707a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+            clip-rule="evenodd" />
+        </svg>
+      </button>
+
+    </div>
+
+
+
+    <!-- ================= QUESTIONS ================= -->
+
+
+
+  </main>
+
+
+
+  <!-- ================= JAVASCRIPT ================= -->
+
+  <script type="module" src="./JS/dashboard.js"></script>
+
+</body>
+
+</html>

@@ -1,69 +1,92 @@
-
+import { API_BASE_URL } from "../api.js";
 const defaultUserData = {
   name: "Alta Student",
   campus: "Alta School of Technology",
   phone: "+91 9876543210",
-  email: "student@alta.edu"
+  email: "student@alta.edu",
 };
 
 let currentUserData = {};
 let isEditMode = false;
 
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
   loadUserData();
-  
-  
-  document.addEventListener('click', (event) => {
-    const dropdown = document.getElementById('profileDropdown');
-    const avatarBtn = document.getElementById('avatarMenuBtn');
-    if (!dropdown.contains(event.target) && !avatarBtn.contains(event.target)) {
-      dropdown.classList.add('hidden');
+
+  document.addEventListener("click", (event) => {
+    const dropdown = document.getElementById("profileDropdown");
+    const avatarBtn = document.getElementById("avatarMenuBtn");
+
+    if (
+      dropdown &&
+      avatarBtn &&
+      !dropdown.contains(event.target) &&
+      !avatarBtn.contains(event.target)
+    ) {
+      dropdown.classList.add("hidden");
     }
   });
 });
 
+async function loadUserData() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+      method: "GET",
+      credentials: "include",
+    });
 
-function loadUserData() {
-  const savedData = localStorage.getItem('alta_user_profile');
-  if (savedData) {
-    currentUserData = JSON.parse(savedData);
-  } else {
-    currentUserData = { ...defaultUserData };
-    localStorage.setItem('alta_user_profile', JSON.stringify(currentUserData));
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error(data.message);
+      return;
+    }
+
+    currentUserData = data.user;
+
+    populateUI();
+  } catch (error) {
+    console.error("Failed to load user:", error);
   }
-
-  populateUI();
 }
-
 
 function populateUI() {
-  
-  document.getElementById('dispName').textContent = currentUserData.name;
-  document.getElementById('dispCampus').textContent = currentUserData.campus;
+  // Main profile
+  document.getElementById("dispName").textContent = currentUserData.name;
 
-  
-  document.getElementById('inputName').value = currentUserData.name;
-  document.getElementById('inputCampus').value = currentUserData.campus;
-  document.getElementById('inputPhone').value = currentUserData.phone;
-  document.getElementById('inputEmail').value = currentUserData.email;
+  document.getElementById("dispCampus").textContent = currentUserData.campus;
 
-  
-  document.getElementById('dropdownName').textContent = currentUserData.name;
-  document.getElementById('dropdownCampus').textContent = currentUserData.campus;
-  document.getElementById('dropdownPhone').textContent = currentUserData.phone;
-  document.getElementById('dropdownEmail').textContent = currentUserData.email;
+  // Profile fields
+  document.getElementById("inputName").value = currentUserData.name;
+
+  document.getElementById("inputCampus").value = currentUserData.campus;
+
+  document.getElementById("inputPhone").value = currentUserData.phone;
+
+  document.getElementById("inputEmail").value = currentUserData.email;
+
+  // // Additional information
+  // document.getElementById("inputYear").value = currentUserData.year;
+
+  // document.getElementById("inputProgram").value = currentUserData.program;
+
+  // // Dropdown
+  // document.getElementById("dropdownName").textContent = currentUserData.name;
+
+  // document.getElementById("dropdownCampus").textContent =
+  //   currentUserData.campus;
+
+  // document.getElementById("dropdownPhone").textContent = currentUserData.phone;
+
+  // document.getElementById("dropdownEmail").textContent = currentUserData.email;
 }
-
 
 function toggleProfileDropdown() {
-  const dropdown = document.getElementById('profileDropdown');
-  dropdown.classList.toggle('hidden');
+  const dropdown = document.getElementById("profileDropdown");
+  dropdown.classList.toggle("hidden");
 }
 
-
 function enableEditModeFromDropdown() {
-  document.getElementById('profileDropdown').classList.add('hidden');
+  document.getElementById("profileDropdown").classList.add("hidden");
   if (!isEditMode) {
     toggleEditMode();
   }
@@ -71,28 +94,28 @@ function enableEditModeFromDropdown() {
 
 function toggleEditMode() {
   isEditMode = true;
-  const inputs = document.querySelectorAll('.field-input');
-  
-  inputs.forEach(input => {
-    input.removeAttribute('disabled');
-    input.classList.add('editable');
+  const inputs = document.querySelectorAll(".field-input");
+
+  inputs.forEach((input) => {
+    input.removeAttribute("disabled");
+    input.classList.add("editable");
   });
 
-  document.getElementById('editToggleBtn').classList.add('hidden');
-  document.getElementById('saveCancelGroup').classList.remove('hidden');
+  document.getElementById("editToggleBtn").classList.add("hidden");
+  document.getElementById("saveCancelGroup").classList.remove("hidden");
 }
 
 function cancelEditMode() {
   isEditMode = false;
-  const inputs = document.querySelectorAll('.field-input');
-  
-  inputs.forEach(input => {
-    input.setAttribute('disabled', 'true');
-    input.classList.remove('editable');
+  const inputs = document.querySelectorAll(".field-input");
+
+  inputs.forEach((input) => {
+    input.setAttribute("disabled", "true");
+    input.classList.remove("editable");
   });
 
-  document.getElementById('saveCancelGroup').classList.add('hidden');
-  document.getElementById('editToggleBtn').classList.remove('hidden');
+  document.getElementById("saveCancelGroup").classList.add("hidden");
+  document.getElementById("editToggleBtn").classList.remove("hidden");
 
   populateUI();
 }
@@ -100,13 +123,13 @@ function cancelEditMode() {
 function saveProfileChanges(event) {
   event.preventDefault();
 
-  const updatedName = document.getElementById('inputName').value.trim();
-  const updatedCampus = document.getElementById('inputCampus').value.trim();
-  const updatedPhone = document.getElementById('inputPhone').value.trim();
-  const updatedEmail = document.getElementById('inputEmail').value.trim();
+  const updatedName = document.getElementById("inputName").value.trim();
+  const updatedCampus = document.getElementById("inputCampus").value.trim();
+  const updatedPhone = document.getElementById("inputPhone").value.trim();
+  const updatedEmail = document.getElementById("inputEmail").value.trim();
 
   if (!updatedName || !updatedCampus || !updatedPhone || !updatedEmail) {
-    alert('Please complete all required profile fields.');
+    alert("Please complete all required profile fields.");
     return;
   }
 
@@ -114,11 +137,11 @@ function saveProfileChanges(event) {
     name: updatedName,
     campus: updatedCampus,
     phone: updatedPhone,
-    email: updatedEmail
+    email: updatedEmail,
   };
 
-  localStorage.setItem('alta_user_profile', JSON.stringify(currentUserData));
+  localStorage.setItem("alta_user_profile", JSON.stringify(currentUserData));
 
   cancelEditMode();
-  alert('Profile updated successfully!');
+  alert("Profile updated successfully!");
 }
