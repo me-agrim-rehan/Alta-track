@@ -92,24 +92,24 @@ export async function getNextSubmission(req, res) {
 
     const lastSolved = solvedQuestions[solvedQuestions.length - 1];
 
-   const solvedAt = new Date(lastSolved.solved_at);
+    const solvedAt = new Date(lastSolved.solved_at);
 
-// Convert both dates to IST calendar dates
-const solvedDateIST = solvedAt.toLocaleDateString("en-CA", {
-  timeZone: "Asia/Kolkata",
-});
+    // Convert both dates to IST calendar dates
+    const solvedDateIST = solvedAt.toLocaleDateString("en-CA", {
+      timeZone: "Asia/Kolkata",
+    });
 
-const todayDateIST = new Date().toLocaleDateString("en-CA", {
-  timeZone: "Asia/Kolkata",
-});
+    const todayDateIST = new Date().toLocaleDateString("en-CA", {
+      timeZone: "Asia/Kolkata",
+    });
 
-// Convert YYYY-MM-DD into UTC dates purely for calendar-day comparison
-const solvedDate = new Date(`${solvedDateIST}T00:00:00Z`);
-const todayDate = new Date(`${todayDateIST}T00:00:00Z`);
+    // Convert YYYY-MM-DD into UTC dates purely for calendar-day comparison
+    const solvedDate = new Date(`${solvedDateIST}T00:00:00Z`);
+    const todayDate = new Date(`${todayDateIST}T00:00:00Z`);
 
-const daysSinceSolved = Math.round(
-  (todayDate - solvedDate) / (24 * 60 * 60 * 1000),
-);
+    const daysSinceSolved = Math.round(
+      (todayDate - solvedDate) / (24 * 60 * 60 * 1000),
+    );
 
     // ----------------------------------------------------------
     // 5. Day 0
@@ -406,27 +406,23 @@ export async function createSubmission(req, res) {
     let shouldResetChallenge = false;
 
     if (solvedCount > 0) {
-      const lastSolved = solvedQuestions[solvedQuestions.length - 1];
-
       const solvedAt = new Date(lastSolved.solved_at);
-      const now = new Date();
 
-      const solvedDate = new Date(
-        solvedAt.getFullYear(),
-        solvedAt.getMonth(),
-        solvedAt.getDate(),
-      );
+      // Get calendar dates in IST
+      const solvedDateIST = solvedAt.toLocaleDateString("en-CA", {
+        timeZone: "Asia/Kolkata",
+      });
 
-      const todayDate = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-      );
+      const todayDateIST = new Date().toLocaleDateString("en-CA", {
+        timeZone: "Asia/Kolkata",
+      });
 
-      const millisecondsPerDay = 24 * 60 * 60 * 1000;
+      // Compare calendar dates only
+      const solvedDate = new Date(`${solvedDateIST}T00:00:00Z`);
+      const todayDate = new Date(`${todayDateIST}T00:00:00Z`);
 
-      const daysSinceSolved = Math.floor(
-        (todayDate - solvedDate) / millisecondsPerDay,
+      const daysSinceSolved = Math.round(
+        (todayDate - solvedDate) / (24 * 60 * 60 * 1000)
       );
 
       // Same day
@@ -508,7 +504,7 @@ export async function createSubmission(req, res) {
     // 9. Check monthly flags before accepting a grace submission
     // ----------------------------------------------------------
 
-    
+
 
     // ----------------------------------------------------------
     // 10. Create submission
