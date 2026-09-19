@@ -572,32 +572,34 @@ export async function createSubmission(req, res) {
       challengeReset: shouldResetChallenge,
     });
   } catch (error) {
-    await client.query("ROLLBACK");
+    try {
+      await client.query("ROLLBACK");
+    } catch (rollbackError) {
+      console.error("Rollback error:", rollbackError);
+    }
 
     console.error("Create submission error:", error);
 
     return res.status(500).json({
-      message: "Failed to create submission.",
+      message: error.message,
     });
-  } finally {
-    client.release();
+
   }
-}
 
-/*
-|--------------------------------------------------------------------------
-| GET /submissions
-|--------------------------------------------------------------------------
-| Returns the authenticated user's submission history.
-|--------------------------------------------------------------------------
-*/
+  /*
+  |--------------------------------------------------------------------------
+  | GET /submissions
+  |--------------------------------------------------------------------------
+  | Returns the authenticated user's submission history.
+  |--------------------------------------------------------------------------
+  */
 
-export async function getMySubmissions(req, res) {
-  try {
-    const userId = req.user.id;
+  export async function getMySubmissions(req, res) {
+    try {
+      const userId = req.user.id;
 
-    const result = await pool.query(
-      `
+      const result = await pool.query(
+        `
             SELECT
                 s.id,
                 s.question_id,
@@ -612,17 +614,17 @@ export async function getMySubmissions(req, res) {
             WHERE s.user_id = $1
             ORDER BY s.question_id ASC
             `,
-      [userId],
-    );
+        [userId],
+      );
 
-    return res.status(200).json({
-      submissions: result.rows,
-    });
-  } catch (error) {
-    console.error("Get submissions error:", error);
+      return res.status(200).json({
+        submissions: result.rows,
+      });
+    } catch (error) {
+      console.error("Get submissions error:", error);
 
-    return res.status(500).json({
-      message: "Failed to load submissions.",
-    });
+      return res.status(500).json({
+        message: "Failed to load submissions.",
+      });
+    }
   }
-}
