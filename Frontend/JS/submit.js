@@ -179,7 +179,7 @@ async function handleSubmission(event) {
     }
 
     const data = await response.json();
-
+    console.log("SUBMISSION RESPONSE:", data);
     if (!response.ok) {
       alert(data.message || "Submission failed.");
 
