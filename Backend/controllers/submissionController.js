@@ -406,6 +406,8 @@ export async function createSubmission(req, res) {
     let shouldResetChallenge = false;
 
     if (solvedCount > 0) {
+      const lastSolved = solvedQuestions[solvedQuestions.length - 1];
+
       const solvedAt = new Date(lastSolved.solved_at);
 
       // Get calendar dates in IST
@@ -425,7 +427,7 @@ export async function createSubmission(req, res) {
         (todayDate - solvedDate) / (24 * 60 * 60 * 1000)
       );
 
-      // Same day
+      // Same calendar day
       if (daysSinceSolved === 0) {
         await client.query("ROLLBACK");
 
@@ -434,18 +436,17 @@ export async function createSubmission(req, res) {
         });
       }
 
-      // Normal submission day
+      // Next calendar day
       if (daysSinceSolved === 1) {
         submissionStatus = "available";
       }
 
-      // Missed one day
+      // Second calendar day = grace + flag
       else if (daysSinceSolved === 2) {
         submissionStatus = "missed";
       }
 
-      // Too late
-      // Too late
+      // Third calendar day onward = reset
       else {
         shouldResetChallenge = true;
         submissionStatus = "reset_required";
@@ -587,20 +588,20 @@ export async function createSubmission(req, res) {
   }
 }
 
-  /*
-  |--------------------------------------------------------------------------
-  | GET /submissions
-  |--------------------------------------------------------------------------
-  | Returns the authenticated user's submission history.
-  |--------------------------------------------------------------------------
-  */
+/*
+|--------------------------------------------------------------------------
+| GET /submissions
+|--------------------------------------------------------------------------
+| Returns the authenticated user's submission history.
+|--------------------------------------------------------------------------
+*/
 
-  export async function getMySubmissions(req, res) {
-    try {
-      const userId = req.user.id;
+export async function getMySubmissions(req, res) {
+  try {
+    const userId = req.user.id;
 
-      const result = await pool.query(
-        `
+    const result = await pool.query(
+      `
             SELECT
                 s.id,
                 s.question_id,
@@ -615,17 +616,17 @@ export async function createSubmission(req, res) {
             WHERE s.user_id = $1
             ORDER BY s.question_id ASC
             `,
-        [userId],
-      );
+      [userId],
+    );
 
-      return res.status(200).json({
-        submissions: result.rows,
-      });
-    } catch (error) {
-      console.error("Get submissions error:", error);
+    return res.status(200).json({
+      submissions: result.rows,
+    });
+  } catch (error) {
+    console.error("Get submissions error:", error);
 
-      return res.status(500).json({
-        message: "Failed to load submissions.",
-      });
-    }
+    return res.status(500).json({
+      message: "Failed to load submissions.",
+    });
   }
+}
