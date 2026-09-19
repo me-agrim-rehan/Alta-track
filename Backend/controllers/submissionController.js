@@ -92,29 +92,24 @@ export async function getNextSubmission(req, res) {
 
     const lastSolved = solvedQuestions[solvedQuestions.length - 1];
 
-    const solvedAt = new Date(lastSolved.solved_at);
+   const solvedAt = new Date(lastSolved.solved_at);
 
-    // Current server date/time
-    const now = new Date();
+// Convert both dates to IST calendar dates
+const solvedDateIST = solvedAt.toLocaleDateString("en-CA", {
+  timeZone: "Asia/Kolkata",
+});
 
-    // Compare calendar dates rather than 24-hour periods.
-    const solvedDate = new Date(
-      solvedAt.getFullYear(),
-      solvedAt.getMonth(),
-      solvedAt.getDate(),
-    );
+const todayDateIST = new Date().toLocaleDateString("en-CA", {
+  timeZone: "Asia/Kolkata",
+});
 
-    const todayDate = new Date(
-      now.getFullYear(),
-      now.getMonth(),
-      now.getDate(),
-    );
+// Convert YYYY-MM-DD into UTC dates purely for calendar-day comparison
+const solvedDate = new Date(`${solvedDateIST}T00:00:00Z`);
+const todayDate = new Date(`${todayDateIST}T00:00:00Z`);
 
-    const millisecondsPerDay = 24 * 60 * 60 * 1000;
-
-    const daysSinceSolved = Math.floor(
-      (todayDate - solvedDate) / millisecondsPerDay,
-    );
+const daysSinceSolved = Math.round(
+  (todayDate - solvedDate) / (24 * 60 * 60 * 1000),
+);
 
     // ----------------------------------------------------------
     // 5. Day 0
