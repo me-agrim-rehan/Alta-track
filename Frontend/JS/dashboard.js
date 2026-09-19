@@ -37,7 +37,7 @@ async function fetchDashboardData() {
     
 
     if (error.message === "Authentication required") {
-      window.location.href = "index.html";
+      window.location.href = "/index.html";
       return;
     }
   }
@@ -252,7 +252,7 @@ function switchView(view) {
 // =========================
 
 function goToSubmissionPage() {
-  window.location.href = "submit.html";
+  window.location.href = "/submit.html";
 }
 
 async function handleLogout() {
@@ -265,7 +265,7 @@ async function handleLogout() {
 
     console.log("Logout response:", data);
 
-    window.location.href = "index.html";
+    window.location.href = "/index.html";
   } catch (error) {
     console.error("Logout error:", error);
     alert(error.message || "Logout failed");
