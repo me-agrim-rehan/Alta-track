@@ -260,7 +260,8 @@ export async function login(req, res) {
     console.error("Login error:", error);
 
     return res.status(500).json({
-      message: "Something went wrong",
+      message: error.message,
+      error: error.name,
     });
   }
 }
