@@ -214,7 +214,6 @@ function openQuestionModal() {
   if (!activeQuestionData) {
     return;
   }
-
   document.getElementById("modalDayTag").textContent =
     `Day ${activeQuestionData.id}`;
 
@@ -226,16 +225,18 @@ function openQuestionModal() {
 
   document.getElementById("questionModal").classList.remove("hidden");
 }
+window.openQuestionModal = openQuestionModal;
 
 function closeQuestionModal() {
   document.getElementById("questionModal").classList.add("hidden");
 }
-
+window.closeQuestionModal = closeQuestionModal;
 function closeQuestionModalOnOverlay(event) {
   if (event.target.id === "questionModal") {
     closeQuestionModal();
   }
 }
+window.closeQuestionModalOnOverlay = closeQuestionModalOnOverlay;
 
 function openHintModal() {
   if (!activeQuestionData) {
