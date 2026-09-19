@@ -182,17 +182,47 @@ export async function getNextSubmission(req, res) {
     // 7. Day 2
     // ----------------------------------------------------------
 
+    // ----------------------------------------------------------
+    // 7. Day 2 = Grace period
+    // ----------------------------------------------------------
+
     if (daysSinceSolved === 2) {
+      // Check how many flags the user already has this month
+      const flagResult = await pool.query(
+        `
+    SELECT COUNT(*)::INTEGER AS flag_count
+    FROM challenge_flags
+    WHERE user_id = $1
+      AND flagged_at >= (
+        DATE_TRUNC(
+          'month',
+          NOW() AT TIME ZONE 'Asia/Kolkata'
+        ) AT TIME ZONE 'Asia/Kolkata'
+      )
+      AND flagged_at < (
+        (
+          DATE_TRUNC(
+            'month',
+            NOW() AT TIME ZONE 'Asia/Kolkata'
+          ) + INTERVAL '1 month'
+        ) AT TIME ZONE 'Asia/Kolkata'
+      )
+    `,
+        [req.user.id],
+      );
+
+      const monthlyFlags = flagResult.rows[0].flag_count;
+
       const questionResult = await pool.query(
         `
-                SELECT
-                    id,
-                    problem,
-                    description
-                FROM questions
-                WHERE id = $1
-                `,
-        [nextQuestionId],
+    SELECT
+      id,
+      problem,
+      description
+    FROM questions
+    WHERE id = $1
+    `,
+        [monthlyFlags >= 1 ? 1 : nextQuestionId],
       );
 
       if (questionResult.rows.length === 0) {
@@ -201,25 +231,32 @@ export async function getNextSubmission(req, res) {
         });
       }
 
+      // Second flag this month = reset
+      if (monthlyFlags >= 1) {
+        return res.status(200).json({
+          canSubmit: true,
+          status: "reset_required",
+          late: true,
+          flagWillBeAdded: true,
+          monthlyFlags,
+          question: questionResult.rows[0],
+          message:
+            "You have already used your grace period once this month. This submission will add another flag and restart your challenge from Question 1.",
+        });
+      }
+
+      // First flag this month = normal grace submission
       return res.status(200).json({
         canSubmit: true,
         status: "grace_period",
         late: true,
         flagWillBeAdded: true,
+        monthlyFlags,
         question: questionResult.rows[0],
         message:
           "You are submitting during the grace period. One flag will be added.",
       });
     }
-
-    // ----------------------------------------------------------
-    // 8. Day 3+
-    // ----------------------------------------------------------
-
-    // ----------------------------------------------------------
-    // 8. Day 3+
-    // ----------------------------------------------------------
-
     // ----------------------------------------------------------
     // 8. Day 3+
     // ----------------------------------------------------------
@@ -453,12 +490,48 @@ export async function createSubmission(req, res) {
       }
     }
     let submissionQuestionId = nextQuestionId;
+    let monthlyFlags = 0;
 
-    if (shouldResetChallenge) {
-      submissionQuestionId = 1;
-    }
     // ----------------------------------------------------------
-    // Reset challenge if submission window was missed
+    // 8. Check monthly flags if this is a grace-day submission
+    // ----------------------------------------------------------
+
+    if (submissionStatus === "missed") {
+      const flagResult = await client.query(
+        `
+    SELECT COUNT(*)::INTEGER AS flag_count
+    FROM challenge_flags
+    WHERE user_id = $1
+      AND flagged_at >= (
+        DATE_TRUNC(
+          'month',
+          NOW() AT TIME ZONE 'Asia/Kolkata'
+        ) AT TIME ZONE 'Asia/Kolkata'
+      )
+      AND flagged_at < (
+        (
+          DATE_TRUNC(
+            'month',
+            NOW() AT TIME ZONE 'Asia/Kolkata'
+          ) + INTERVAL '1 month'
+        ) AT TIME ZONE 'Asia/Kolkata'
+      )
+    `,
+        [userId],
+      );
+
+      monthlyFlags = flagResult.rows[0].flag_count;
+
+      // Second flag this month = reset challenge
+      if (monthlyFlags >= 1) {
+        shouldResetChallenge = true;
+        submissionStatus = "reset_required";
+        submissionQuestionId = 1;
+      }
+    }
+
+    // ----------------------------------------------------------
+    // 9. Reset challenge if required
     // ----------------------------------------------------------
 
     if (shouldResetChallenge) {
@@ -478,18 +551,19 @@ export async function createSubmission(req, res) {
         [userId],
       );
     }
+
     // ----------------------------------------------------------
-    // 8. Check whether this question was already submitted
+    // 10. Check whether this question was already submitted
     // ----------------------------------------------------------
 
     const existingSubmission = await client.query(
       `
-                SELECT id
-                FROM submissions
-                WHERE user_id = $1
-                AND question_id = $2
-                LIMIT 1
-                `,
+  SELECT id
+  FROM submissions
+  WHERE user_id = $1
+    AND question_id = $2
+  LIMIT 1
+  `,
       [userId, submissionQuestionId],
     );
 
@@ -502,49 +576,48 @@ export async function createSubmission(req, res) {
     }
 
     // ----------------------------------------------------------
-    // 9. Check monthly flags before accepting a grace submission
+    // 11. Add flag if this was a grace-day submission
     // ----------------------------------------------------------
 
-
-
-    // ----------------------------------------------------------
-    // 10. Create submission
-    // ----------------------------------------------------------
-
-    const submissionResult = await client.query(
-      `
-            INSERT INTO submissions (
-                user_id,
-                question_id,
-                linkedin_url,
-                github_url
-            )
-            VALUES ($1, $2, $3, $4)
-            RETURNING
-                id,
-                user_id,
-                question_id,
-                linkedin_url,
-                github_url,
-                submitted_at,
-                updated_at
-            `,
-      [
-        userId,
-        submissionQuestionId,
-        linkedin.toString(),
-        github ? github.toString() : null,
-      ],
-    );
-
-    // ----------------------------------------------------------
-    // 11. Add flag if this was the grace day
-    // ----------------------------------------------------------
+    if (
+      submissionStatus === "missed" ||
+      (shouldResetChallenge && monthlyFlags >= 1)
+    ) {
+      await client.query(
+        `
+    INSERT INTO challenge_flags (
+      user_id,
+      question_id
+    )
+    VALUES ($1, $2)
+    ON CONFLICT (user_id, question_id)
+    DO NOTHING
+    `,
+        [userId, nextQuestionId],
+      );
+    }
 
     // ----------------------------------------------------------
     // 12. Mark question as solved
     // ----------------------------------------------------------
-    //
+    const submissionResult = await client.query(
+      `
+  INSERT INTO submissions (
+      user_id,
+      question_id,
+      linkedin_url,
+      github_url
+  )
+  VALUES ($1, $2, $3, $4)
+  RETURNING id, question_id, linkedin_url, github_url, submitted_at
+  `,
+      [
+        userId,
+        submissionQuestionId,
+        linkedinUrl.trim(),
+        github ? github.toString() : null,
+      ],
+    );
     // IMPORTANT:
     // Your current solved_questions table uses email.
     // Once we migrate it to user_id, change this accordingly.

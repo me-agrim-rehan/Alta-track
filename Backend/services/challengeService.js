@@ -1,31 +1,42 @@
 import pool from "../db.js";
 
+function getISTDate(date) {
+  return date.toLocaleDateString("en-CA", {
+    timeZone: "Asia/Kolkata",
+  });
+}
+
+function getCalendarDayDifference(date1, date2) {
+  const d1 = new Date(`${getISTDate(date1)}T00:00:00Z`);
+  const d2 = new Date(`${getISTDate(date2)}T00:00:00Z`);
+
+  return Math.round(
+    (d2 - d1) / (24 * 60 * 60 * 1000)
+  );
+}
 function calculateCurrentStreak(solvedQuestions) {
   if (solvedQuestions.length === 0) {
     return 0;
   }
 
+  // Get unique submission dates in IST
+  const uniqueDates = [
+    ...new Set(
+      solvedQuestions.map((question) =>
+        getISTDate(new Date(question.solved_at))
+      )
+    ),
+  ];
+
   let streak = 1;
 
-  for (let i = solvedQuestions.length - 1; i > 0; i--) {
-    const current = new Date(solvedQuestions[i].solved_at);
-    const previous = new Date(solvedQuestions[i - 1].solved_at);
+  for (let i = uniqueDates.length - 1; i > 0; i--) {
+    const currentDate = new Date(`${uniqueDates[i]}T00:00:00Z`);
+    const previousDate = new Date(`${uniqueDates[i - 1]}T00:00:00Z`);
 
-    const currentDate = new Date(
-      current.getFullYear(),
-      current.getMonth(),
-      current.getDate()
+    const daysBetween = Math.round(
+      (currentDate - previousDate) / (24 * 60 * 60 * 1000)
     );
-
-    const previousDate = new Date(
-      previous.getFullYear(),
-      previous.getMonth(),
-      previous.getDate()
-    );
-
-    const daysBetween =
-      (currentDate - previousDate) /
-      (24 * 60 * 60 * 1000);
 
     if (daysBetween === 1) {
       streak++;
@@ -72,19 +83,12 @@ export async function getChallengeState(userId, userEmail) {
   const solvedAt = new Date(lastSolved.solved_at);
   const now = new Date();
 
-  const solvedDate = new Date(
-    solvedAt.getFullYear(),
-    solvedAt.getMonth(),
-    solvedAt.getDate(),
+  const daysSinceSolved = getCalendarDayDifference(
+    solvedAt,
+    now
   );
 
-  const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  const millisecondsPerDay = 24 * 60 * 60 * 1000;
-
-  const daysSinceSolved = Math.floor(
-    (todayDate - solvedDate) / millisecondsPerDay,
-  );
 
   const monthlyFlags = await getMonthlyFlags(userId);
 
@@ -161,10 +165,14 @@ export async function getMonthlyFlags(userId) {
     SELECT COUNT(*)::INTEGER AS flag_count
     FROM challenge_flags
     WHERE user_id = $1
-      AND flagged_at >= DATE_TRUNC('month', CURRENT_DATE)
-      AND flagged_at <
-          DATE_TRUNC('month', CURRENT_DATE)
-          + INTERVAL '1 month'
+      AND flagged_at >= DATE_TRUNC(
+        'month',
+        NOW() AT TIME ZONE 'Asia/Kolkata'
+      )
+      AND flagged_at < DATE_TRUNC(
+        'month',
+        NOW() AT TIME ZONE 'Asia/Kolkata'
+      ) + INTERVAL '1 month'
     `,
     [userId],
   );
@@ -198,16 +206,9 @@ export async function processMissedDay(userId, userEmail) {
   const solvedAt = new Date(lastSolved.solved_at);
   const now = new Date();
 
-  const solvedDate = new Date(
-    solvedAt.getFullYear(),
-    solvedAt.getMonth(),
-    solvedAt.getDate(),
-  );
-
-  const todayDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-  const daysSinceSolved = Math.floor(
-    (todayDate - solvedDate) / (24 * 60 * 60 * 1000),
+  const daysSinceSolved = getCalendarDayDifference(
+    solvedAt,
+    now
   );
 
   const nextQuestionId = solvedQuestions.length + 1;
