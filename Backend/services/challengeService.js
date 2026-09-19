@@ -83,11 +83,28 @@ export async function getChallengeState(userId, userEmail) {
   const solvedAt = new Date(lastSolved.solved_at);
   const now = new Date();
 
+  
   const daysSinceSolved = getCalendarDayDifference(
     solvedAt,
     now
   );
-
+console.log("DEBUG solvedAt:", solvedAt.toISOString());
+console.log(
+  "DEBUG solved IST:",
+  getISTDate(solvedAt)
+);
+console.log(
+  "DEBUG now:",
+  now.toISOString()
+);
+console.log(
+  "DEBUG now IST:",
+  getISTDate(now)
+);
+console.log(
+  "DEBUG daysSinceSolved:",
+  daysSinceSolved
+);
 
 
   const monthlyFlags = await getMonthlyFlags(userId);
